@@ -567,6 +567,16 @@ This is a monorepo. The three parts are separated, each usable on its own:
 - **Formal proofs** (`proof/`) — the Lean 4 modules (`proof/lean/`, `lake build BoyerMooreFormal`) and the proof documents. This is the formal component; it is the same content the standalone formal folder carried, so it is not duplicated elsewhere in the repo.
 - **Engine** (`engine/`) — the CompCert-lowered core. Self-contained: its own `Makefile`, `src/`, `asm/bm_core.s`, and `tests/`. `cd engine && make test` builds the CompCert core and runs the 4,265-check suite against it; `make verify` adds the 16-case CLI comparison against the GCC binary. The engine vendors the C files it needs (`src/bm_parallel.c`, `src/bm_unicode.c`, `src/bm.h`) so it builds standalone, even where a file is identical to one at the root.
 
+### Photos — the engine running
+
+`make test` lowers the core with CompCert and runs the 4,265-check suite:
+
+![engine — make test](docs/images/engine_make_test.png)
+
+`make verify` runs the same suite, then compares the CompCert binary against the GCC binary on 16 CLI cases, byte for byte:
+
+![engine — make verify](docs/images/engine_make_verify.png)
+
 ```
 boyer-moore-search/
 ├── README.md                       # This file
@@ -1013,7 +1023,7 @@ echo "XABCABCD" | ./bin/bm "ABCD"
 **Certification Date**: 2026-09-21
 **Proof Count**: 20 obligations verified
 **Code Quality**: -Wall -Wextra -Werror passing
-**License**: MIT OR Apache-2.0 OR GPL-3.0-or-later
+**License**: SnapKitty Strong Network Copyleft License (SSNCL-1.0) — see `license`
 
 ---
 
