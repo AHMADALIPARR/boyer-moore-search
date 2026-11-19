@@ -40,36 +40,62 @@ void compute_border_array(const char *P, int m, int *border) {
 
 /*
  * Compute good-suffix table
- * goodsuffix[i] = minimum shift when mismatch at position i
- * Uses border array to find rightmost occurrence of suffix
+ * goodsuffix[j] = shift when a mismatch occurs at pattern position j,
+ * i.e. the suffix P[j+1..m-1] (length L = m-1-j) matched.
+ *
+ * Standard Boyer-Moore good-suffix rule, computed directly:
+ *   L == 0: no suffix matched, the rule gives no shift (1).
+ *   Case 1: the suffix occurs elsewhere in P (ending before m-1)
+ *     with a different preceding character (or at the start);
+ *     shift to the rightmost such occurrence.
+ *   Case 2: otherwise, the longest prefix of P that is a suffix
+ *     of the matched suffix; shift so that prefix aligns.
+ *   Case 3: otherwise, shift by the full pattern length.
+ *
+ * The table is verified against a naive-search oracle by
+ * tests/test_bm.c (fixed cases + 4000 randomized trials).
  *
  * INV_GOODSUFFIX:
- *   ∀i ∈ [0,m): goodsuffix[i] ≥ 1
+ *   ∀j ∈ [0,m): goodsuffix[j] ≥ 1
  *   ∧ No valid match is skipped
  */
 void compute_goodsuffix_table(const char *P, int m, int *goodsuffix) {
-    int *border = (int *)malloc(m * sizeof(int));
-    if (!border) return;
+    for (int j = 0; j < m; j++) {
+        int L = m - 1 - j; /* length of the matched suffix P[j+1..m-1] */
 
-    compute_border_array(P, m, border);
-
-    /* Initialize with pattern length shift (conservative) */
-    for (int i = 0; i < m; i++) {
-        goodsuffix[i] = m;
-    }
-
-    /* For each position, compute optimal shift */
-    int j = border[m - 1];
-    for (int i = m - 1; i >= 0; i--) {
-        if (i == m - 1 || P[i + 1] != P[j]) {
-            goodsuffix[i] = m - 1 - j;
+        if (L == 0) {
+            /* No suffix matched: the good-suffix rule gives no shift. */
+            goodsuffix[j] = 1;
+            continue;
         }
-        if (i > 0) {
-            j = border[j - 1];
-        }
-    }
 
-    free(border);
+        int shift = m; /* default: Case 3 (no occurrence, no prefix) */
+
+        /* Case 1: rightmost occurrence of the suffix elsewhere in P,
+         * ending at or before m-2, with a different preceding char
+         * (or at the start). Shift so it aligns with the match. */
+        for (int i = m - 1 - L; i >= 0; i--) {
+            if (memcmp(P + i, P + j + 1, (size_t)L) == 0) {
+                if (i == 0 || P[i - 1] != P[j]) {
+                    shift = j + 1 - i;
+                    break; /* rightmost occurrence: smallest shift */
+                }
+            }
+        }
+
+        if (shift == m) {
+            /* Case 2: longest prefix of P that is a suffix of the
+             * matched suffix. Shift so that prefix aligns. */
+            for (int k = L; k >= 1; k--) {
+                if (memcmp(P, P + j + 1 + L - k, (size_t)k) == 0) {
+                    shift = m - k;
+                    break;
+                }
+            }
+        }
+
+        goodsuffix[j] = shift;
+    }
 }
 
 /*
@@ -77,6 +103,7 @@ void compute_goodsuffix_table(const char *P, int m, int *goodsuffix) {
  * When we have a suffix match, compute how far to shift
  */
 int compute_suffix_shift(const char *P, int m, int matched_len, int *goodsuffix) {
+    (void)P; /* Pattern is implicit in the precomputed table */
     if (matched_len <= 0 || matched_len >= m) {
         return m;
     }

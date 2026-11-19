@@ -333,16 +333,16 @@ Iteration 1: s=0
   Position 0 ruled out ✓
 
 Iteration 2: s=1
-  Compare from right: D≠C (pos 3)
-  shift = 3 - LAST(P, 'C') = 3 - 2 = 1
-  Position 1 ruled out ✓
+  Compare from right: D≠A (pos 3)
+  shift = 3 - LAST(P, 'A') = 3 - 0 = 3
+  Positions 1, 2, 3 ruled out ✓
 
-Iteration 3: s=2
+Iteration 3: s=4
   Compare from right: D=D (pos 3) ✓
                       C=C (pos 2) ✓
                       B=B (pos 1) ✓
                       A=A (pos 0) ✓
-  FOUND at position 2
+  FOUND at position 4
 ```
 
 ---
@@ -956,7 +956,7 @@ make build
 # Or via pipe
 echo "XABCABCD" | ./bin/bm "ABCD"
 
-# Expected output: 2 (byte offset)
+# Expected output: 4 (byte offset)
 # Exit code: 0 (found)
 ```
 

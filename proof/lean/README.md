@@ -56,14 +56,12 @@ cd proof/lean
 # Initialize dependencies
 lake update
 
-# Build all proofs
-lake build
+# Build all proofs (the library target is named explicitly;
+# a bare `lake build` builds no targets in this layout)
+lake build BoyerMooreFormal
 
 # Check specific file
 lake env lean LinearAlgebraVerification.lean
-
-# Generate documentation
-lake build DocsGen
 ```
 
 ## License

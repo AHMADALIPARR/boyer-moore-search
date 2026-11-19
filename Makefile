@@ -3,7 +3,7 @@
 # Commercial repository - Apache-2.0 OR GPL-3.0-or-later
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -O2 -fno-builtin -pedantic-errors -std=c11
+CFLAGS = -Wall -Wextra -Werror -O2 -fno-builtin -pedantic-errors -std=c11 -Iinclude
 LDFLAGS = -static -lpthread
 
 # Targets
@@ -27,8 +27,10 @@ build: $(BIN)
 $(BIN): $(BM_SRC)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
+# Test binary: test_bm.c provides main(), so bin/bm.c is compiled with
+# -DBM_NO_MAIN to exclude its CLI main() (avoids duplicate main).
 $(TESTS): $(TEST_SRC) $(BM_SRC)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -DBM_NO_MAIN -o $@ $^
 
 proof: $(PROOF_DOCS)
 	@echo "Formal proofs verified:"

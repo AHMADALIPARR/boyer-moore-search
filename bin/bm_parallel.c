@@ -96,8 +96,9 @@ static void *parallel_search_worker(void *arg) {
     parallel_task_t *task = (parallel_task_t *)arg;
 
     /* Expand search range to catch matches at boundaries */
-    size_t search_start = (task->chunk_start > 0 && task->chunk_start >= task->pattern_len - 1)
-                         ? task->chunk_start - (task->pattern_len - 1)
+    size_t overlap = (task->pattern_len > 0) ? (size_t)(task->pattern_len - 1) : 0;
+    size_t search_start = (task->chunk_start > 0 && task->chunk_start >= overlap)
+                         ? task->chunk_start - overlap
                          : 0;
 
     size_t search_end = (task->chunk_end + task->pattern_len <= task->text_len)
@@ -120,8 +121,12 @@ static void *parallel_search_worker(void *arg) {
         if ((size_t)actual_offset >= task->chunk_start) {
             pthread_mutex_lock(task->lock);
 
-            /* Record only first match found */
-            if (!task->result->match_found) {
+            /* Record the smallest offset found (the first match),
+             * not merely the first thread to finish. Keeping only
+             * the first finisher let a later chunk's thread win
+             * the race and return a later match than the first. */
+            if (!task->result->match_found ||
+                (size_t)actual_offset < task->result->match_offset) {
                 task->result->match_found = 1;
                 task->result->match_offset = actual_offset;
                 task->result->thread_id = task->thread_id;

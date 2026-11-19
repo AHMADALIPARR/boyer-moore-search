@@ -39,8 +39,9 @@ def finSum (n : Nat) (f : Fin n → Nat) : Nat :=
 @[simp] theorem finSum_succ (n : Nat) (f : Fin (n + 1) → Nat) :
     finSum (n + 1) f = finSum n (fun i => f i.castSucc) + f (Fin.last n) := rfl
 
-def byteSum (bs : List Nat) : Nat :=
-  bs.foldl (fun s b => (s + b) % 65536) 0
+def byteSum : List Nat → Nat
+  | [] => 0
+  | b :: bs => (b + byteSum bs) % 65536
 
 -- =============================================================================
 -- 2. Axiom 1: finSum_zero_fun
@@ -83,7 +84,7 @@ theorem finSum_eq_single (n : Nat) (k : Fin n) (f : Fin n → Nat)
         apply hi
         apply Fin.ext
         have := congrArg Fin.val h
-        simp [Fin.castSucc_val] at this
+        simp only [Fin.coe_castSucc] at this
         exact this)
       simp [finSum, hk, ih', hlastf]
 
@@ -136,7 +137,7 @@ theorem finSum_add (n : Nat) (f g : Fin n → Nat) :
 theorem byteSum_bounded (bs : List Nat) : byteSum bs < 65536 := by
   induction bs with
   | nil => decide
-  | cons b bs' ih =>
+  | cons b bs' _ih =>
     simp only [byteSum_cons]
     omega
 
@@ -145,8 +146,8 @@ theorem byteSum_bounded (bs : List Nat) : byteSum bs < 65536 := by
 -- =============================================================================
 
 theorem byteSum_singleton (b : Nat) (hb : b < 256) : byteSum [b] = b := by
-  simp only [byteSum_cons, byteSum_nil, zero_add, Nat.mod_eq_of_lt]
-  exact Nat.lt_of_lt_of_le hb (by decide)
+  simp only [byteSum_cons, byteSum_nil, zero_add]
+  exact Nat.mod_eq_of_lt (by omega)
 
 -- =============================================================================
 -- 10. Axiom 9: byteSum_append_order_independent
@@ -160,10 +161,9 @@ theorem byteSum_append_commutes (bs1 bs2 : List Nat) :
 -- 11. Axiom 10: byteSum_monotone
 -- =============================================================================
 
-theorem byteSum_mono (bs1 bs2 : List Nat) (h : bs1 ⊆ bs2) :
+theorem byteSum_mono (bs1 bs2 : List Nat) (_h : bs1 ⊆ bs2) :
     byteSum bs1 ≤ byteSum bs2 ∨ byteSum bs1 > byteSum bs2 := by
-  left
-  sorry -- Depends on specific list structure; intuitively monotone via subset
+  exact le_or_lt _ _
 
 -- =============================================================================
 -- 12. Summary: Axiom Registry

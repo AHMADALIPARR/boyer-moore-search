@@ -20,6 +20,10 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+proof/lean/.lake/
+
+# Lean build outputs (the .olean cache is fetched, not committed)
+proof/lean/.lake/build/
 
 # Temporary
 *.tmp
