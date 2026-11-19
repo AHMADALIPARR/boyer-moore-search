@@ -561,6 +561,12 @@ find . -type f | xargs -I {} ./bm "pattern" {}
 
 ### Directory Structure
 
+This is a monorepo. The three parts are separated, each usable on its own:
+
+- **C implementation + tests** (`bin/`, `include/`, `tests/`, root `Makefile`) — the hand-rolled C search, the parallel fix, the 4,265-check suite.
+- **Formal proofs** (`proof/`) — the Lean 4 modules (`proof/lean/`, `lake build BoyerMooreFormal`) and the proof documents. This is the formal component; it is the same content the standalone formal folder carried, so it is not duplicated elsewhere in the repo.
+- **Engine** (`engine/`) — the CompCert-lowered core. Self-contained: its own `Makefile`, `src/`, `asm/bm_core.s`, and `tests/`. `cd engine && make test` builds the CompCert core and runs the 4,265-check suite against it; `make verify` adds the 16-case CLI comparison against the GCC binary. The engine vendors the C files it needs (`src/bm_parallel.c`, `src/bm_unicode.c`, `src/bm.h`) so it builds standalone, even where a file is identical to one at the root.
+
 ```
 boyer-moore-search/
 ├── README.md                       # This file
@@ -573,6 +579,14 @@ boyer-moore-search/
 │
 ├── include/
 │   └── bm.h                        # Public header
+│
+├── engine/                         # CompCert-lowered core (self-contained)
+│   ├── Makefile                    # make test / make verify
+│   ├── README.md
+│   ├── STATUS.md
+│   ├── asm/bm_core.s               # CompCert 3.12 output (the product)
+│   ├── src/                        # bm_core.c, bm_core.h, harness.c (+ vendored)
+│   └── tests/                      # cli_compare.sh, test_bm.c
 │
 ├── proof/
 │   ├── BOYER_MOORE_FORMAL_PROOF.md
